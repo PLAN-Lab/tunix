@@ -17,7 +17,6 @@
 from collections.abc import Iterable
 import dataclasses
 
-from flax import config as flax_config
 from flax import nnx
 import jax
 import jax.numpy as jnp
@@ -25,10 +24,6 @@ import numpy as np
 import qwix
 
 import sentencepiece as spm
-
-
-if hasattr(flax_config, 'flax_always_shard_variable'):
-  flax_config.update('flax_always_shard_variable', False)
 
 
 def assert_equal(path, x, y):
