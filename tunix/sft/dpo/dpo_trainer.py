@@ -259,16 +259,6 @@ class DPOTrainer(peft_trainer.PeftTrainer):
     positions = common.build_positions_from_mask(mask)
 
     # Compute the log probabilities for the chosen and rejected tokens.
-<<<<<<< Updated upstream
-    ref_chosen_logps, ref_rejected_logps = compute_logps(
-        self.ref_model,
-        input_ids,
-        positions,
-        attention_mask,
-        logits_to_keep,
-        completion_mask,
-    )
-=======
     ref_chosen_logps = None
     ref_rejected_logps = None
     if self._ref_model_exists:
@@ -281,7 +271,6 @@ class DPOTrainer(peft_trainer.PeftTrainer):
           completion_mask,
           pixel_values=pixel_values,
       )
->>>>>>> Stashed changes
     return TrainExample(
         input_ids=input_ids,
         positions=positions,

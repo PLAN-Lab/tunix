@@ -216,14 +216,6 @@ def compute_per_token_logps(
   prompt_completion_ids, positions, attn_mask = process_ids(
       prompt_tokens, completion_tokens, pad_id, eos_id, completion_mask
   )
-<<<<<<< Updated upstream
-  per_token_logps, logits = get_per_token_logps(
-      model,
-      input_tokens=prompt_completion_ids,
-      positions=positions,
-      attn_mask=attn_mask,
-      logits_to_keep=completion_tokens.shape[1],
-=======
   # logits, _ = model(
   #     input_tokens, positions=positions, attention_mask=attn_mask, cache=None
   # )
@@ -233,7 +225,6 @@ def compute_per_token_logps(
     attention_mask=attn_mask,
     cache=None,
     pixel_values=pixel_values,
->>>>>>> Stashed changes
   )
   if stop_gradient:
     per_token_logps = jax.lax.stop_gradient(per_token_logps)
