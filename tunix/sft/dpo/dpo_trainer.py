@@ -92,6 +92,7 @@ class TrainExample:
   ref_rejected_logps: jax.Array
   completion_mask: jax.Array
   logits_to_keep: int = flax.struct.field(pytree_node=False)
+  pixel_values: jax.Array | None = None
 
 
 @dataclasses.dataclass(slots=True, kw_only=True)
@@ -114,6 +115,7 @@ def compute_logps(
     attention_mask,
     logits_to_keep,
     completion_mask,
+    pixel_values=None,
 ):
   """Computes the log probabilities for chosen and rejected tokens."""
   token_logps, _ = common.get_per_token_logps(
@@ -122,6 +124,7 @@ def compute_logps(
       positions=positions,
       attn_mask=attention_mask,
       logits_to_keep=logits_to_keep,
+      pixel_values=pixel_values,
   )
   token_logps = (token_logps * completion_mask).sum(axis=-1)
 
@@ -244,11 +247,19 @@ class DPOTrainer(peft_trainer.PeftTrainer):
 
     # Compute positions, attention mask, etc., to be fed to the model.
     mask = jnp.concat([prompt_mask, completion_mask], axis=1)
+    
+    
+    # Pixel values (for multimodal): duplicate for chosen+rejected forward.
+    pixel_values = training_input.pixel_values
+    if pixel_values is not None:
+        pixel_values = jnp.concatenate([pixel_values, pixel_values], axis=0)
+
     attention_mask = common.make_causal_attn_mask(mask)
     logits_to_keep = completion_ids.shape[1]
     positions = common.build_positions_from_mask(mask)
 
     # Compute the log probabilities for the chosen and rejected tokens.
+<<<<<<< Updated upstream
     ref_chosen_logps, ref_rejected_logps = compute_logps(
         self.ref_model,
         input_ids,
@@ -257,6 +268,20 @@ class DPOTrainer(peft_trainer.PeftTrainer):
         logits_to_keep,
         completion_mask,
     )
+=======
+    ref_chosen_logps = None
+    ref_rejected_logps = None
+    if self._ref_model_exists:
+      ref_chosen_logps, ref_rejected_logps = compute_logps(
+          self.ref_model,
+          input_ids,
+          positions,
+          attention_mask,
+          logits_to_keep,
+          completion_mask,
+          pixel_values=pixel_values,
+      )
+>>>>>>> Stashed changes
     return TrainExample(
         input_ids=input_ids,
         positions=positions,
@@ -265,6 +290,7 @@ class DPOTrainer(peft_trainer.PeftTrainer):
         ref_rejected_logps=ref_rejected_logps,
         completion_mask=completion_mask,
         logits_to_keep=logits_to_keep,
+        pixel_values=pixel_values,
     )
 
   @override
@@ -306,6 +332,7 @@ def dpo_loss_fn(
       train_example.attention_mask,
       train_example.logits_to_keep,
       train_example.completion_mask,
+      pixel_values=train_example.pixel_values,
   )
 
   chosen_rewards = chosen_logps - train_example.ref_chosen_logps
